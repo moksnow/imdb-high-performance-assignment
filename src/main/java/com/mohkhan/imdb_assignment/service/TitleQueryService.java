@@ -9,7 +9,7 @@ import com.mohkhan.imdb_assignment.model.entity.PersonEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleBasicEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleRatingEntity;
 import com.mohkhan.imdb_assignment.model.response.PagedResponse;
-import com.mohkhan.imdb_assignment.repository.store.ImdbDataStore;
+import com.mohkhan.imdb_assignment.store.ImdbDataStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class TitleQueryService {
     // -----------------------------------------------------------------------
     private final Map<String, List<CommonTitleDto>> commonTitlesCache =
             Collections.synchronizedMap(
-                    new LinkedHashMap<String, List<CommonTitleDto>>(100, 0.75f, true) {
+                    new LinkedHashMap<>(100, 0.75f, true) {
                         @Override
                         protected boolean removeEldestEntry(
                                 Map.Entry<String, List<CommonTitleDto>> eldest) {
