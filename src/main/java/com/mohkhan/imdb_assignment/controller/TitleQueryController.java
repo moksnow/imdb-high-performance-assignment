@@ -7,6 +7,7 @@ import com.mohkhan.imdb_assignment.model.dto.DirectorWriterTitleDto;
 import com.mohkhan.imdb_assignment.model.response.ApiResponse;
 import com.mohkhan.imdb_assignment.model.response.PagedResponse;
 import com.mohkhan.imdb_assignment.service.TitleQueryService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,8 @@ import java.util.List;
  * Date: 5/1/2026
  * Time: 5:37 PM
  */
+
+@Tag(name = "Titles", description = "IMDb Query APIs")
 @RestController
 @RequestMapping("/api/imdb")
 @RequiredArgsConstructor
