@@ -1,5 +1,6 @@
-package com.mohkhan.imdb_assignment.dao.store;
+package com.mohkhan.imdb_assignment.repository.store;
 
+import com.mohkhan.imdb_assignment.model.dto.DirectorWriterTitleDto;
 import com.mohkhan.imdb_assignment.model.entity.PersonEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleBasicEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleRatingEntity;
@@ -23,7 +24,7 @@ public class ImdbDataStore {
     private final Map<String, TitleBasicEntity> titleById = new ConcurrentHashMap<>(11_000_000);
     private final Map<String, TitleRatingEntity> ratingById = new ConcurrentHashMap<>(1_600_000);
     private final Map<String, PersonEntity> personById = new ConcurrentHashMap<>(14_000_000);
-    private final Set<String> titlesWithSameAliveDirectorWriter = ConcurrentHashMap.newKeySet(2_000_000);
+    private final List<DirectorWriterTitleDto> directorWriterTitles = Collections.synchronizedList(new ArrayList<>(2_000_000));
     private final Map<String, Set<String>> titlesByActor = new ConcurrentHashMap<>(3_500_000);
     private final Map<String, Set<String>> titlesByGenre = new ConcurrentHashMap<>(30);
     private final Map<String, List<String>> personsByName = new ConcurrentHashMap<>(13_000_000);
@@ -44,8 +45,12 @@ public class ImdbDataStore {
         personById.put(person.getNconst(), person);
     }
 
-    public void addDirectorWriterTitle(String tconst) {
-        titlesWithSameAliveDirectorWriter.add(tconst);
+    public void addDirectorWriterTitle(DirectorWriterTitleDto dto) {
+        directorWriterTitles.add(dto);
+    }
+
+    public List<DirectorWriterTitleDto> findDirectorWriterTitles() {
+        return directorWriterTitles;
     }
 
     public void addActorTitle(String nconst, String tconst) {
@@ -98,7 +103,4 @@ public class ImdbDataStore {
         return titleById.values();
     }
 
-    public Set<String> findTitlesWithSameAliveDirectorWriter() {
-        return Collections.unmodifiableSet(titlesWithSameAliveDirectorWriter);
-    }
 }

@@ -1,6 +1,5 @@
 package com.mohkhan.imdb_assignment.service;
 
-import com.mohkhan.imdb_assignment.dao.store.ImdbDataStore;
 import com.mohkhan.imdb_assignment.exception.DataNotReadyException;
 import com.mohkhan.imdb_assignment.exception.InvalidRequestException;
 import com.mohkhan.imdb_assignment.model.dto.BestTitlePerYearDto;
@@ -10,6 +9,7 @@ import com.mohkhan.imdb_assignment.model.entity.PersonEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleBasicEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleRatingEntity;
 import com.mohkhan.imdb_assignment.model.response.PagedResponse;
+import com.mohkhan.imdb_assignment.repository.store.ImdbDataStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -34,9 +34,10 @@ public class TitleQueryService {
     // -----------------------------------------------------------------------
     private final Map<String, List<CommonTitleDto>> commonTitlesCache =
             Collections.synchronizedMap(
-                    new LinkedHashMap<>(100, 0.75f, true) {
+                    new LinkedHashMap<String, List<CommonTitleDto>>(100, 0.75f, true) {
                         @Override
-                        protected boolean removeEldestEntry(Map.Entry<String, List<CommonTitleDto>> eldest) {
+                        protected boolean removeEldestEntry(
+                                Map.Entry<String, List<CommonTitleDto>> eldest) {
                             return size() > 100;
                         }
                     }
@@ -72,39 +73,17 @@ public class TitleQueryService {
         );
     }
 
+    // -----------------------------------------------------------------------
+    // Task 3: titles where both actors appeared — accepts nconst IDs
+    // -----------------------------------------------------------------------
     private List<DirectorWriterTitleDto> computeDirectorWriterTitles() {
-        return store.findTitlesWithSameAliveDirectorWriter().stream()
-                .map(this::buildDirectorWriterDto)
-                .filter(Objects::nonNull)
+        return store.findDirectorWriterTitles().stream()
                 .sorted(Comparator
                         .comparing(DirectorWriterTitleDto::getStartYear,
                                 Comparator.nullsLast(Comparator.reverseOrder()))
                         .thenComparing(DirectorWriterTitleDto::getAverageRating,
                                 Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
-    }
-
-    // -----------------------------------------------------------------------
-    // Task 3: titles where both actors appeared
-    // No pagination — result naturally small (0-50 titles typically)
-    // -----------------------------------------------------------------------
-
-    private DirectorWriterTitleDto buildDirectorWriterDto(String tconst) {
-        TitleBasicEntity title = store.findTitle(tconst);
-        if (title == null) return null;
-
-        TitleRatingEntity rating = store.findRating(tconst);
-
-        return DirectorWriterTitleDto.builder()
-                .tconst(tconst)
-                .primaryTitle(title.getPrimaryTitle())
-                .startYear(title.getStartYear())
-                .genres(title.getGenres())
-//                .personId(alivePerson.getNconst())
-//                .personName(alivePerson.getPrimaryName())
-                .averageRating(rating != null ? rating.getAverageRating() : null)
-                .numVotes(rating != null ? rating.getNumVotes() : null)
-                .build();
     }
 
     public List<CommonTitleDto> getCommonTitles(String actor1Nconst, String actor2Nconst) {
@@ -114,7 +93,7 @@ public class TitleQueryService {
             throw new InvalidRequestException("actor1 and actor2 must be different persons.");
         }
 
-        // Normalize key — (A,B) and (B,A) return same result, share one cache entry
+        // Normalize — (A,B) and (B,A) produce same result, share one entry
         String cacheKey = actor1Nconst.compareTo(actor2Nconst) < 0
                 ? actor1Nconst + "|" + actor2Nconst
                 : actor2Nconst + "|" + actor1Nconst;
@@ -127,6 +106,11 @@ public class TitleQueryService {
         Set<String> titles1 = store.findTitlesByActor(actor1Nconst);
         Set<String> titles2 = store.findTitlesByActor(actor2Nconst);
 
+        if (titles1.isEmpty() || titles2.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Iterate the smaller set — O(min(|A|,|B|)) instead of O(|A|+|B|)
         Set<String> smaller = titles1.size() <= titles2.size() ? titles1 : titles2;
         Set<String> larger = smaller == titles1 ? titles2 : titles1;
 
@@ -140,28 +124,6 @@ public class TitleQueryService {
                         .thenComparing(CommonTitleDto::getNumVotes,
                                 Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
-    }
-
-    public List<CommonTitleDto> getCommonTitlesByName(String actor1Name, String actor2Name) {
-        ensureReady();
-
-        PersonEntity person1 = resolveActor(actor1Name);
-        PersonEntity person2 = resolveActor(actor2Name);
-
-        return getCommonTitles(person1.getNconst(), person2.getNconst());
-    }
-
-    private PersonEntity resolveActor(String name) {
-        List<String> nconsts = store.findPersonsByName(name);
-        if (nconsts.isEmpty()) {
-            throw new InvalidRequestException("Actor not found: " + name);
-        }
-        return nconsts.stream()
-                .map(store::findPerson)
-                .filter(Objects::nonNull)
-                .max(Comparator.comparingInt(p ->
-                        store.findTitlesByActor(p.getNconst()).size()))
-                .orElseThrow();
     }
 
     private CommonTitleDto buildCommonTitleDto(String tconst) {
@@ -181,9 +143,37 @@ public class TitleQueryService {
     }
 
     // -----------------------------------------------------------------------
+    // Task 3 (by name): resolves actor names to nconsts, delegates to above
+    // -----------------------------------------------------------------------
+    public List<CommonTitleDto> getCommonTitlesByName(String actor1Name, String actor2Name) {
+        ensureReady();
+
+        if (actor1Name.equalsIgnoreCase(actor2Name)) {
+            throw new InvalidRequestException("actor1 and actor2 must be different persons.");
+        }
+
+        PersonEntity person1 = resolveActor(actor1Name);
+        PersonEntity person2 = resolveActor(actor2Name);
+
+        return getCommonTitles(person1.getNconst(), person2.getNconst());
+    }
+
+    private PersonEntity resolveActor(String name) {
+        List<String> nconsts = store.findPersonsByName(name.toLowerCase().trim());
+        if (nconsts.isEmpty()) {
+            throw new InvalidRequestException("Actor not found: " + name);
+        }
+        return nconsts.stream()
+                .map(store::findPerson)
+                .filter(Objects::nonNull)
+                .max(Comparator.comparingInt(p ->
+                        store.findTitlesByActor(p.getNconst()).size()))
+                .orElseThrow(() ->
+                        new InvalidRequestException("Actor not found: " + name));
+    }
+
+    // -----------------------------------------------------------------------
     // Task 4: best title per year for a given genre
-    // No pagination — max ~130 rows (one per year)
-    // Cached per genre — stable result, expensive to compute
     // -----------------------------------------------------------------------
     @Cacheable(value = "bestTitlesByGenre", key = "#genre")
     public List<BestTitlePerYearDto> getBestTitlesByGenre(String genre) {
@@ -226,7 +216,8 @@ public class TitleQueryService {
                 challenger.getAverageRating(),
                 current.getAverageRating() != null ? current.getAverageRating() : 0.0);
         if (ratingCmp != 0) return ratingCmp > 0;
-        return challenger.getNumVotes() > (current.getNumVotes() != null ? current.getNumVotes() : 0);
+        return challenger.getNumVotes() >
+                (current.getNumVotes() != null ? current.getNumVotes() : 0);
     }
 
     private BestTitlePerYearDto buildBestTitleDto(TitleBasicEntity title, TitleRatingEntity rating) {
