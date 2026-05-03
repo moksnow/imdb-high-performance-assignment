@@ -147,7 +147,7 @@ The application requires explicit heap allocation. Default JVM heap (~25% of RAM
 is insufficient for the full dataset.
 
 ```bash
-java -Xms8g -Xmx20g -jar imdb-high-performance-assignment.jar
+java -Xms8g -Xmx20g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -jar imdb-high-performance-assignment.jar
 ```
 
 **Tradeoffs:**
@@ -329,14 +329,14 @@ Set `app.skip-data-load=true` to skip loading and use a pre-warmed store
 ### Run with Maven
 
 ```bash
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xms8g -Xmx20g"
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xms8g -Xmx20g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication"
 ```
 
 ### Run with JAR
 
 ```bash
 mvn clean package -DskipTests
-java -Xms8g -Xmx20g -jar target/imdb-high-performance-assignment.jar
+java -Xms8g -Xmx20g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -jar target/imdb-high-performance-assignment.jar
 ```
 
 ---

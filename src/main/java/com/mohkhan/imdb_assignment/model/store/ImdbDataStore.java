@@ -51,7 +51,7 @@ public class ImdbDataStore {
 
     public void addActorTitle(String nconst, String tconst) {
         titlesByActor
-                .computeIfAbsent(nconst, k -> ConcurrentHashMap.newKeySet())
+                .computeIfAbsent(nconst, k -> ConcurrentHashMap.newKeySet(8))
                 .add(tconst);
     }
 
