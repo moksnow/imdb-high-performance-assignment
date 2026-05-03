@@ -39,11 +39,12 @@ public class ImdbLoadCoordinator {
     private String datasetPath;
 
     public void loadAllData() {
+
+        ExecutorService phase1Pool = Executors.newFixedThreadPool(3);
         try {
             log.info("Starting IMDB data load from: {}", datasetPath);
             long start = System.currentTimeMillis();
 
-            ExecutorService phase1Pool = Executors.newFixedThreadPool(3);
 
             CompletableFuture<Void> basicsFuture = CompletableFuture.runAsync(this::loadTitleBasicsSafe, phase1Pool);
 
@@ -68,6 +69,8 @@ public class ImdbLoadCoordinator {
 
         } catch (Exception e) {
             log.error("IMDB data load failed — all data endpoints will return 503", e);
+        } finally {
+            phase1Pool.shutdown();
         }
     }
 
@@ -104,10 +107,11 @@ public class ImdbLoadCoordinator {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] p = line.split("\t", -1);
+                String[] p = fieldParser.split(line);
                 if (p.length < 9) continue;
 
                 String tconst = p[0];
+                String genresRaw = fieldParser.value(p[8]);
 
                 store.putTitle(TitleBasicEntity.builder()
                         .tconst(tconst)
@@ -117,12 +121,11 @@ public class ImdbLoadCoordinator {
                         .startYear(fieldParser.parseInt(p[5]))
                         .endYear(fieldParser.parseInt(p[6]))
                         .runtimeMinutes(fieldParser.parseInt(p[7]))
-                        .genres(fieldParser.value(p[8]))
+                        .genres(genresRaw)
                         .build());
 
-                String genresRaw = fieldParser.value(p[8]);
                 if (genresRaw != null) {
-                    for (String genre : genresRaw.split(",")) {
+                    for (String genre : fieldParser.split(line)) {
                         String clean = genre.trim();
                         if (!clean.isEmpty()) {
                             store.addGenreTitle(clean, tconst);
@@ -148,7 +151,7 @@ public class ImdbLoadCoordinator {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] p = line.split("\t", -1);
+                String[] p = fieldParser.split(line);
                 if (p.length < 3) continue;
 
                 Double rating = fieldParser.parseDouble(p[1]);
@@ -216,7 +219,7 @@ public class ImdbLoadCoordinator {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] p = line.split("\t", -1);
+                String[] p = fieldParser.split(line);
                 if (p.length < 3) continue;
 
                 String tconst = p[0];

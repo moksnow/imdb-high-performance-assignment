@@ -11,6 +11,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class PersonEntity {
+
     private final String nconst;
     private final String primaryName;
     private final Integer deathYear;       // null = alive (per assignment spec)

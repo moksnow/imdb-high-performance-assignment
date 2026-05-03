@@ -21,7 +21,6 @@ import java.util.List;
  * Date: 5/1/2026
  * Time: 5:37 PM
  */
-
 @Tag(name = "Titles", description = "IMDb Query APIs")
 @RestController
 @RequestMapping("/api/imdb")

@@ -42,6 +42,7 @@ public class TitleQueryService {
                         }
                     }
             );
+
     private volatile List<DirectorWriterTitleDto> directorWriterCache = null;
 
     public PagedResponse<DirectorWriterTitleDto> getDirectorWriterTitles(int page, int size) {
@@ -73,9 +74,6 @@ public class TitleQueryService {
         );
     }
 
-    // -----------------------------------------------------------------------
-    // Task 3: titles where both actors appeared — accepts nconst IDs
-    // -----------------------------------------------------------------------
     private List<DirectorWriterTitleDto> computeDirectorWriterTitles() {
         return store.findDirectorWriterTitles().stream()
                 .sorted(Comparator
@@ -89,7 +87,7 @@ public class TitleQueryService {
     public List<CommonTitleDto> getCommonTitles(String actor1Nconst, String actor2Nconst) {
         ensureReady();
 
-        if (actor1Nconst.equals(actor2Nconst)) {
+        if (actor1Nconst.equalsIgnoreCase(actor2Nconst)) {
             throw new InvalidRequestException("actor1 and actor2 must be different persons.");
         }
 

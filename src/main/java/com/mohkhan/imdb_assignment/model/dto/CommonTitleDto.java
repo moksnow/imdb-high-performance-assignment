@@ -11,6 +11,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CommonTitleDto {
+
     private final String tconst;
     private final String primaryTitle;
     private final Integer startYear;

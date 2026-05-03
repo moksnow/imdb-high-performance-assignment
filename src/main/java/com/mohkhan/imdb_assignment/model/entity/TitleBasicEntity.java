@@ -8,10 +8,10 @@ import lombok.Getter;
  * Date: 4/30/2026
  * Time: 5:47 PM
  */
-
 @Getter
 @Builder
 public class TitleBasicEntity {
+
     private final String tconst;
     private final String titleType;
     private final String primaryTitle;

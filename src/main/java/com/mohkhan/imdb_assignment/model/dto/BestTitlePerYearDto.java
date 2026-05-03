@@ -11,6 +11,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class BestTitlePerYearDto {
+
     private final int year;
     private final String tconst;
     private final String primaryTitle;

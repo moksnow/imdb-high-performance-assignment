@@ -17,10 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ImdbDataStore {
 
-    // ---------------------------------------------------------------
-    // Primary indexes — O(1) lookup by ID
-    // ---------------------------------------------------------------
-
     private final Map<String, TitleBasicEntity> titleById = new ConcurrentHashMap<>(11_000_000);
     private final Map<String, TitleRatingEntity> ratingById = new ConcurrentHashMap<>(1_600_000);
     private final Map<String, PersonEntity> personById = new ConcurrentHashMap<>(14_000_000);

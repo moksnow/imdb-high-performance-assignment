@@ -8,10 +8,10 @@ import lombok.Getter;
  * Date: 4/30/2026
  * Time: 7:21 PM
  */
-
 @Getter
 @Builder
 public class TitleRatingEntity {
+
     private final String tconst;
     private final Double averageRating;
     private final Integer numVotes;
