@@ -1,4 +1,4 @@
-package com.mohkhan.imdb_assignment.store;
+package com.mohkhan.imdb_assignment.model.store;
 
 import com.mohkhan.imdb_assignment.model.dto.DirectorWriterTitleDto;
 import com.mohkhan.imdb_assignment.model.entity.PersonEntity;

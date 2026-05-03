@@ -54,7 +54,6 @@ ImdbDatasetLoader             — parallel TSV.GZ parsing at startup
 |-------|-------------------------------------------------------------|
 | `controller/` | REST endpoints, request validation, ApiResponse wrapping    |
 | `service/` | Query logic, caching, ensureReady() guard, Parallel file parsing    |
-| `store/` | All in-memory indexes — single source of truth              |
 | `model/dto/` | Response DTOs — never expose internal entities directly     |
 | `model/entity/` | Lightweight POJOs mapped from TSV rows                      |
 | `model/response/` | Uniform API envelope (ApiResponse, PagedResponse, ApiError) |
@@ -127,7 +126,7 @@ the director-writer intersection and alive check are computed during the single
 crew file pass. Only the final `DirectorWriterTitleDto` objects are stored (~500MB).
 This saves ~3GB of heap with no query-time tradeoff.
 
-**Approximate load times (32GB RAM, -Xmx18g):**
+**Approximate load times (32GB RAM, -Xmx16g):**
 
 | Phase | Time |
 |-------|------|
@@ -148,7 +147,7 @@ The application requires explicit heap allocation. Default JVM heap (~25% of RAM
 is insufficient for the full dataset.
 
 ```bash
-java -Xms8g -Xmx18g -jar imdb-high-performance-assignment.jar
+java -Xms8g -Xmx16g -jar imdb-high-performance-assignment.jar
 ```
 
 **Tradeoffs:**
@@ -331,14 +330,14 @@ Set `app.skip-data-load=true` to skip loading and use a pre-warmed store
 ### Run with Maven
 
 ```bash
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xms8g -Xmx18g"
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Xms8g -Xmx16g"
 ```
 
 ### Run with JAR
 
 ```bash
 mvn clean package -DskipTests
-java -Xms8g -Xmx18g -jar target/imdb-high-performance-assignment.jar
+java -Xms8g -Xmx16g -jar target/imdb-high-performance-assignment.jar
 ```
 
 ---
@@ -348,8 +347,6 @@ java -Xms8g -Xmx18g -jar target/imdb-high-performance-assignment.jar
 ```
 src/main/java/com/mohkhan/imdb_assignment/
 ├── ImdbAssignmentApplication.java
-├── store/
-│   └── ImdbDataStore.java              — all in-memory indexes
 ├── controller/
 │   └── TitleQueryController.java       — REST endpoints
 ├── service/
@@ -361,6 +358,8 @@ src/main/java/com/mohkhan/imdb_assignment/
 │       ├── TsvFileUtil.java            — file reading helpers
 │       └── FieldUtil.java              — TSV field parsing
 ├── model/
+│   ├── store/
+│   │    └── ImdbDataStore.java         — all in-memory indexes
 │   ├── dto/
 │   │   ├── DirectorWriterTitleDto.java
 │   │   ├── CommonTitleDto.java

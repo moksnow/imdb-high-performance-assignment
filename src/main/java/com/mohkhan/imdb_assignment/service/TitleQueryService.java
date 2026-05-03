@@ -9,7 +9,7 @@ import com.mohkhan.imdb_assignment.model.entity.PersonEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleBasicEntity;
 import com.mohkhan.imdb_assignment.model.entity.TitleRatingEntity;
 import com.mohkhan.imdb_assignment.model.response.PagedResponse;
-import com.mohkhan.imdb_assignment.store.ImdbDataStore;
+import com.mohkhan.imdb_assignment.model.store.ImdbDataStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
