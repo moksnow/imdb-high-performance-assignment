@@ -34,7 +34,7 @@ public class TitleQueryService {
     // -----------------------------------------------------------------------
     private final Map<String, List<CommonTitleDto>> commonTitlesCache =
             Collections.synchronizedMap(
-                    new LinkedHashMap<>(100, 0.75f, true) {
+                    new LinkedHashMap<String, List<CommonTitleDto>>(100, 0.75f, true) {
                         @Override
                         protected boolean removeEldestEntry(
                                 Map.Entry<String, List<CommonTitleDto>> eldest) {
